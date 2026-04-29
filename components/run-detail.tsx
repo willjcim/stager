@@ -34,6 +34,12 @@ type Run = {
   finishedAt: string | null;
   error?: string | null;
   shareToken?: string | null;
+  // listing metadata - all nullable older runs never captured these
+  price?: number | null;
+  beds?: number | null;
+  baths?: number | null;
+  livingAreaSqft?: number | null;
+  lotSize?: string | null;
 };
 
 type Photo = {
@@ -143,6 +149,7 @@ export function RunDetail({ id, readOnly = false, shareToken }: Props) {
             <h1 className="truncate text-xl font-semibold tracking-tight">
               {run.address || "Fetching listing…"}
             </h1>
+            <ListingMeta run={run} />
             {!readOnly && run.zillowUrl ? (
               <a
                 href={run.zillowUrl}
@@ -397,6 +404,45 @@ function CancelButton({ runId, onCancelled }: { runId: string; onCancelled: () =
       {busy ? "Cancelling…" : "Cancel run"}
     </button>
   );
+}
+
+// listing metadata strip rendered under the address in the run header
+// hides individual fields that are null so older runs (no captured metadata)
+// just show nothing instead of a row of placeholders
+function ListingMeta({ run }: { run: Run }) {
+  const items: Array<{ key: string; value: string }> = [];
+  if (run.price != null) items.push({ key: "price", value: formatPrice(run.price) });
+  if (run.beds != null) items.push({ key: "beds", value: `${formatBedsBaths(run.beds)} bd` });
+  if (run.baths != null) items.push({ key: "baths", value: `${formatBedsBaths(run.baths)} ba` });
+  if (run.livingAreaSqft != null) {
+    items.push({ key: "sqft", value: `${run.livingAreaSqft.toLocaleString("en-US")} sqft` });
+  }
+  if (run.lotSize) items.push({ key: "lot", value: `${run.lotSize} lot` });
+
+  if (!items.length) return null;
+  return (
+    <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
+      {items.map((it, i) => (
+        <span key={it.key} className="flex items-center gap-2">
+          {i > 0 ? <span aria-hidden className="text-muted-foreground/40">·</span> : null}
+          <span>{it.value}</span>
+        </span>
+      ))}
+    </div>
+  );
+}
+
+function formatPrice(n: number) {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    maximumFractionDigits: 0,
+  }).format(n);
+}
+
+// 4 -> "4"  2.5 -> "2.5"  drops trailing .0
+function formatBedsBaths(n: number) {
+  return Number.isInteger(n) ? String(n) : n.toFixed(1).replace(/\.0$/, "");
 }
 
 // per-photo card

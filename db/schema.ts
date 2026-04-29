@@ -139,6 +139,12 @@ export const runs = pgTable(
       .references(() => users.id, { onDelete: "cascade" }),
     zillowUrl: text("zillow_url").notNull(),
     address: text("address").notNull().default(""), // run title
+    // listing metadata captured at fetch time (all nullable - older runs have none)
+    price: integer("price"), // dollars
+    beds: real("beds"),
+    baths: real("baths"),
+    livingAreaSqft: integer("living_area_sqft"),
+    lotSize: text("lot_size"), // pre-formatted display string eg "0.25 acres"
     status: runStatusEnum("status").notNull().default("queued"),
     modelTier: modelTierEnum("model_tier").notNull().default("flash"),
     workflowRunId: text("workflow_run_id"),

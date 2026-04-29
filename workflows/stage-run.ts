@@ -44,13 +44,27 @@ async function fetchZillowStep(input: { zillowUrl: string }) {
   return fetchZillowListing(input.zillowUrl);
 }
 
-// write run header (address photo count status running) and seed runPhotos rows
-async function initRunStep(input: { runId: string; address: string; photos: string[] }) {
+// write run header (address listing metadata photo count status running) and seed runPhotos rows
+async function initRunStep(input: {
+  runId: string;
+  address: string;
+  photos: string[];
+  price: number | null;
+  beds: number | null;
+  baths: number | null;
+  livingAreaSqft: number | null;
+  lotSize: string | null;
+}) {
   "use step";
   await db
     .update(runs)
     .set({
       address: input.address,
+      price: input.price,
+      beds: input.beds,
+      baths: input.baths,
+      livingAreaSqft: input.livingAreaSqft,
+      lotSize: input.lotSize,
       photoCount: input.photos.length,
       status: "running",
     })
@@ -237,6 +251,11 @@ export async function stageRunWorkflow(input: { runId: string; modelTier: ModelT
       runId: input.runId,
       address: listing.address,
       photos: listing.photos,
+      price: listing.price,
+      beds: listing.beds,
+      baths: listing.baths,
+      livingAreaSqft: listing.livingAreaSqft,
+      lotSize: listing.lotSize,
     });
 
     const { boards, pinsByBoard } = await loadBoardsStep({ runId: input.runId });

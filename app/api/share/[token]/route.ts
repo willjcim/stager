@@ -22,6 +22,11 @@ export async function GET(_req: Request, { params }: { params: Promise<{ token: 
       failedCount: runs.failedCount,
       createdAt: runs.createdAt,
       finishedAt: runs.finishedAt,
+      price: runs.price,
+      beds: runs.beds,
+      baths: runs.baths,
+      livingAreaSqft: runs.livingAreaSqft,
+      lotSize: runs.lotSize,
     })
     .from(runs)
     .where(eq(runs.shareToken, token));

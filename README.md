@@ -5,18 +5,15 @@ Re-stage Zillow listings in the style of your Pinterest boards
 ## How it works
 
 1. Add Pinterest boards by URL. Scrapes them via Apify, copies hi-res pin images to
-   Vercel Blob, and persists pin rows in Postgres.
+   Vercel Blob, and persists pin rows in Postgres
 2. Submit a Zillow listing URL plus any saved boards. The app pulls the listing photos +
-   address via Apify and titles the run after the address.
-3. A durable workflow processes every photo in parallel:
+   address via Apify and titles the run after the address
+3. workflow processes every photo async:
    - classify the room with `gemini-2.5-flash`
-   - match it to the closest-themed Pinterest board (loose matching, low-confidence
-     fallback uses every selected board's pins as references)
-   - re-stage with Nano Banana (`gemini-3.1-flash-image-preview` by default,
-     `gemini-3-pro-image` when you flip the toggle) using the room photo plus up to six
-     reference pins
+   - match it to the closest-themed Pinterest board
+   - re-stage with Nano Banana using the room photo plus up to six reference pins
    - upload the result to Vercel Blob and update the run row
-4. The dashboard and run-detail pages poll Postgres so progress is live as photos finish.
+4. The dashboard and run-detail pages poll Postgres so progress is live as photos finish
 
 ## Setup
 
@@ -27,8 +24,6 @@ cp .env.example .env.local
 npm run db:push      # push the schema to your postgres
 npm run dev
 ```
-
-Open http://localhost:3000 and sign in with GitHub.
 
 ### Required environment variables
 
@@ -43,8 +38,9 @@ Open http://localhost:3000 and sign in with GitHub.
 
 ### Models
 
-Models are configured in `lib/ai.ts`. Swapping is a one-line change since everything routes
-through the AI Gateway. Default tiers:
+Models are configured in `lib/ai.ts`
+
+Default tiers:
 
 - classifier + matcher: `google/gemini-2.5-flash`
 - staging Flash: `google/gemini-3.1-flash-image-preview`

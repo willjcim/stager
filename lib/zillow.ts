@@ -1,10 +1,15 @@
 // zillow listing fetch via apify maxcopell/zillow-detail-scraper
-// returns address (for run title) plus full hi-res photo gallery
+// returns address (for run title) full hi-res photo gallery and listing metadata
 import { runActor } from "@/lib/apify";
 
 export type ZillowListing = {
   address: string;
   photos: string[]; // hi-res image urls
+  price: number | null; // dollars
+  beds: number | null;
+  baths: number | null;
+  livingAreaSqft: number | null;
+  lotSize: string | null; // pre-formatted display string
 };
 
 // strip tracking params and hash so the scraper sees the canonical detail url
@@ -41,6 +46,31 @@ type RawListing = {
   responsivePhotos?: Array<{
     mixedSources?: { jpeg?: ResponsivePhoto[]; webp?: ResponsivePhoto[] };
   }>;
+  // listing facts - the actor exposes these under multiple shapes
+  price?: number | string;
+  bedrooms?: number;
+  bathrooms?: number;
+  livingArea?: number | string;
+  livingAreaValue?: number;
+  lotSize?: number | string;
+  lotAreaValue?: number;
+  lotAreaUnits?: string; // "acres" | "sqft"
+  resoFacts?: {
+    lotSize?: string;
+    livingArea?: string;
+    bedrooms?: number | string;
+    bathrooms?: number | string;
+  };
+  hdpData?: {
+    homeInfo?: {
+      price?: number;
+      bedrooms?: number;
+      bathrooms?: number;
+      livingArea?: number;
+      lotAreaValue?: number;
+      lotAreaUnit?: string;
+    };
+  };
 };
 
 // pick the largest jpeg url out of a mixedSources block
@@ -57,6 +87,71 @@ function formatAddress(raw: RawListing): string {
   if (!a) return "Unknown address";
   const parts = [a.streetAddress, a.city, a.state, a.zipcode].filter(Boolean);
   return parts.join(", ") || "Unknown address";
+}
+
+// coerce arbitrary apify field shapes (number | numeric string | null) to number
+function toNumber(v: unknown): number | null {
+  if (typeof v === "number" && Number.isFinite(v)) return v;
+  if (typeof v === "string") {
+    const n = Number(v.replace(/[^0-9.]/g, ""));
+    return Number.isFinite(n) && n > 0 ? n : null;
+  }
+  return null;
+}
+
+// pick the first non-null result from a list of getters
+function firstOf<T>(...vals: Array<T | null | undefined>): T | null {
+  for (const v of vals) if (v != null) return v;
+  return null;
+}
+
+// pull listing metadata out of the (very inconsistent) apify payload
+function extractMetadata(raw: RawListing): {
+  price: number | null;
+  beds: number | null;
+  baths: number | null;
+  livingAreaSqft: number | null;
+  lotSize: string | null;
+} {
+  const home = raw.hdpData?.homeInfo ?? {};
+  const reso = raw.resoFacts ?? {};
+
+  const price = firstOf(toNumber(raw.price), toNumber(home.price));
+  const beds = firstOf(toNumber(raw.bedrooms), toNumber(home.bedrooms), toNumber(reso.bedrooms));
+  const baths = firstOf(
+    toNumber(raw.bathrooms),
+    toNumber(home.bathrooms),
+    toNumber(reso.bathrooms),
+  );
+  const livingAreaSqft = firstOf(
+    toNumber(raw.livingAreaValue),
+    toNumber(raw.livingArea),
+    toNumber(home.livingArea),
+    toNumber(reso.livingArea),
+  );
+
+  // lot size - prefer a pre-formatted display string then fall back to value+unit
+  let lotSize: string | null = null;
+  if (typeof reso.lotSize === "string" && reso.lotSize.trim()) {
+    lotSize = reso.lotSize.trim();
+  } else if (typeof raw.lotSize === "string" && raw.lotSize.trim()) {
+    lotSize = raw.lotSize.trim();
+  } else {
+    const lotVal = firstOf(toNumber(raw.lotAreaValue), toNumber(home.lotAreaValue));
+    const lotUnit = (raw.lotAreaUnits ?? home.lotAreaUnit ?? "").toLowerCase();
+    if (lotVal != null) {
+      if (lotUnit.startsWith("acre")) {
+        lotSize = `${lotVal < 10 ? lotVal.toFixed(2) : Math.round(lotVal)} acres`;
+      } else if (lotUnit.startsWith("sq")) {
+        lotSize = `${lotVal.toLocaleString("en-US")} sqft`;
+      } else if (lotVal >= 43560) {
+        // assume sqft when we have no unit and value is huge
+        lotSize = `${lotVal.toLocaleString("en-US")} sqft`;
+      }
+    }
+  }
+
+  return { price, beds, baths, livingAreaSqft, lotSize };
 }
 
 // fetch listing photos and address from a zillow url
@@ -79,5 +174,6 @@ export async function fetchZillowListing(zillowUrl: string): Promise<ZillowListi
   return {
     address: formatAddress(listing),
     photos,
+    ...extractMetadata(listing),
   };
 }
