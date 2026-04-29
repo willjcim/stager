@@ -1,6 +1,6 @@
 # Stager
 
-Re-stage Zillow listings in the style of your Pinterest boards
+stage Zillow listings in the style of your Pinterest boards
 
 ## How it works
 
