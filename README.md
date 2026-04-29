@@ -4,10 +4,8 @@ Re-stage Zillow listings in the style of your Pinterest boards
 
 ## How it works
 
-1. Add Pinterest boards by URL. Scrapes them via Apify, copies hi-res pin images to
-   Vercel Blob, and persists pin rows in Postgres
-2. Submit a Zillow listing URL plus any saved boards. The app pulls the listing photos +
-   address via Apify and titles the run after the address
+1. Add Pinterest boards by URL. Scrapes them via Apify, copies hi-res pin images to Vercel Blob, and persists pin rows in Postgres
+2. Submit a Zillow listing URL plus any saved boards. The app pulls the listing photos + address via Apify and titles the run after the address
 3. workflow processes every photo async:
    - classify the room with `gemini-2.5-flash`
    - match it to the closest-themed Pinterest board
