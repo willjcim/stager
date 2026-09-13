@@ -1,6 +1,7 @@
-// auth.js v5 setup with github oauth and the drizzle adapter
+// auth.js v5 setup with github + google oauth and the drizzle adapter
 import NextAuth from "next-auth";
 import GitHub from "next-auth/providers/github";
+import Google from "next-auth/providers/google";
 import { DrizzleAdapter } from "@auth/drizzle-adapter";
 import { db } from "@/lib/db";
 import { users, accounts, sessions, verificationTokens } from "@/db/schema";
@@ -12,7 +13,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     sessionsTable: sessions,
     verificationTokensTable: verificationTokens,
   }),
-  providers: [GitHub],
+  providers: [GitHub, Google],
   pages: {
     signIn: "/login",
   },

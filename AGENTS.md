@@ -7,7 +7,7 @@ Re-stage Zillow listings in the style of a user's Pinterest boards.
 - Next.js 16 App Router (Turbopack)
 - React 19, Tailwind v4
 - Postgres via `drizzle-orm` (postgres-js driver)
-- `next-auth` v5 (GitHub OAuth, Drizzle adapter, DB sessions)
+- `next-auth` v5 (GitHub + Google OAuth, Drizzle adapter, DB sessions)
 - `workflow` (Vercel Workflow DevKit) for durable async work
 - `ai` SDK + Vercel AI Gateway (Gemini 2.5 Flash for classify/match, Gemini 3 Flash/Pro for staging)
 - `@vercel/blob` for image storage
@@ -46,7 +46,7 @@ The current design — child-workflow fan-out via `start()` from inside a single
 ```
 app/
   (app)/                    authed pages (dashboard, boards, runs)
-  (auth)/login              github sign-in
+  (auth)/login              github + google sign-in
   api/                      route handlers
     runs/[id]/cancel        POST cancel an in-flight run
     runs/[id]/share         POST create / DELETE revoke share token
@@ -136,7 +136,7 @@ npx eslint .              # lint
 ## Environment
 
 Required env vars (see `.env.example`):
-- `AUTH_SECRET`, `AUTH_GITHUB_ID`, `AUTH_GITHUB_SECRET`
+- `AUTH_SECRET`, `AUTH_GITHUB_ID`, `AUTH_GITHUB_SECRET`, `AUTH_GOOGLE_ID`, `AUTH_GOOGLE_SECRET`
 - `DATABASE_URL` (Postgres / Neon)
 - `BLOB_READ_WRITE_TOKEN` (only when Blob store is in another project)
 - `AI_GATEWAY_API_KEY` (omit in prod — OIDC handles it)

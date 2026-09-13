@@ -29,6 +29,7 @@ npm run dev
 |---|---|
 | `AUTH_SECRET` | `openssl rand -base64 32` |
 | `AUTH_GITHUB_ID`, `AUTH_GITHUB_SECRET` | GitHub Developer Settings -> OAuth Apps. Callback: `<origin>/api/auth/callback/github` |
+| `AUTH_GOOGLE_ID`, `AUTH_GOOGLE_SECRET` | Google Cloud Console -> APIs & Services -> Credentials -> OAuth 2.0 Client ID. Authorized redirect URI: `<origin>/api/auth/callback/google` |
 | `DATABASE_URL` | Vercel Postgres / Neon connection string |
 | `BLOB_READ_WRITE_TOKEN` | Vercel Blob store token |
 | `AI_GATEWAY_API_KEY` | Vercel AI Gateway (or rely on OIDC in prod) |
